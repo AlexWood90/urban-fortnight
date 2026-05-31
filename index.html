@@ -1,0 +1,370 @@
+<!DOCTYPE html><html lang="en-AU">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alex Lean-Out Coach</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }body {
+  min-height: 100vh;
+  background: linear-gradient(160deg, #07111f, #102a43, #0b1724);
+  color: white;
+  padding: 20px;
+}
+
+.app {
+  max-width: 430px;
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.header h1 {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.header p {
+  color: #b6c7d8;
+  font-size: 15px;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  padding: 18px;
+  margin-bottom: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+
+.status {
+  text-align: center;
+}
+
+.status h2 {
+  font-size: 21px;
+  margin-bottom: 8px;
+}
+
+.status p {
+  color: #d4e4f3;
+  line-height: 1.4;
+}
+
+.time {
+  font-size: 38px;
+  font-weight: bold;
+  margin: 12px 0;
+}
+
+.button {
+  width: 100%;
+  border: none;
+  border-radius: 16px;
+  padding: 15px;
+  font-size: 16px;
+  font-weight: bold;
+  background: #18d26e;
+  color: #04130a;
+  margin-top: 10px;
+  cursor: pointer;
+}
+
+.button.secondary {
+  background: #1f8cff;
+  color: white;
+}
+
+.button.dark {
+  background: rgba(255,255,255,0.12);
+  color: white;
+}
+
+.schedule-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.schedule-item:last-child {
+  border-bottom: none;
+}
+
+.schedule-left h3 {
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.schedule-left p {
+  color: #b6c7d8;
+  font-size: 13px;
+}
+
+.badge {
+  background: rgba(24, 210, 110, 0.16);
+  color: #67ffab;
+  padding: 7px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.check-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.check {
+  background: rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 14px;
+  text-align: center;
+  cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.check.done {
+  background: rgba(24, 210, 110, 0.18);
+  border-color: #18d26e;
+}
+
+.check span {
+  display: block;
+  font-size: 24px;
+  margin-bottom: 6px;
+}
+
+.small {
+  color: #b6c7d8;
+  font-size: 13px;
+  line-height: 1.5;
+  margin-top: 8px;
+}
+
+input {
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  border: none;
+  margin-top: 10px;
+  font-size: 16px;
+}
+
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <h1>Lean-Out Coach 💪</h1>
+      <p>Meal reminders, fasting window, water checks and daily accountability.</p>
+    </div><div class="card status">
+  <h2 id="currentStatus">Loading...</h2>
+  <div class="time" id="clock">--:--</div>
+  <p id="statusMessage">Checking your schedule...</p>
+  <button class="button" onclick="enableNotifications()">Enable Notifications</button>
+  <p class="small">Notifications work best when this app is open or installed as a PWA.</p>
+</div>
+
+<div class="card">
+  <h2>Today's Schedule</h2>
+
+  <div class="schedule-item">
+    <div class="schedule-left">
+      <h3>Morning Hydration</h3>
+      <p>Water only. Stay fasted.</p>
+    </div>
+    <div class="badge">6:00 AM</div>
+  </div>
+
+  <div class="schedule-item">
+    <div class="schedule-left">
+      <h3>First Meal</h3>
+      <p>Protein first. Avoid sugary food.</p>
+    </div>
+    <div class="badge">12:30 PM</div>
+  </div>
+
+  <div class="schedule-item">
+    <div class="schedule-left">
+      <h3>Protein Check</h3>
+      <p>Snack or meal if protein is low.</p>
+    </div>
+    <div class="badge">3:30 PM</div>
+  </div>
+
+  <div class="schedule-item">
+    <div class="schedule-left">
+      <h3>Final Meal</h3>
+      <p>Protein, veg and controlled carbs.</p>
+    </div>
+    <div class="badge">6:30 PM</div>
+  </div>
+
+  <div class="schedule-item">
+    <div class="schedule-left">
+      <h3>Fasting Starts</h3>
+      <p>Kitchen closed. Water only.</p>
+    </div>
+    <div class="badge">7:30 PM</div>
+  </div>
+
+  <div class="schedule-item">
+    <div class="schedule-left">
+      <h3>Daily Check-In</h3>
+      <p>Weight, steps, water and workout.</p>
+    </div>
+    <div class="badge">8:00 PM</div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Daily Tracker</h2>
+  <div class="check-grid">
+    <div class="check" onclick="toggleCheck(this)"><span>💧</span>3L Water</div>
+    <div class="check" onclick="toggleCheck(this)"><span>🥩</span>Protein Hit</div>
+    <div class="check" onclick="toggleCheck(this)"><span>🚶</span>10k Steps</div>
+    <div class="check" onclick="toggleCheck(this)"><span>🏋️</span>Workout</div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Quick Check-In</h2>
+  <input id="weight" type="number" placeholder="Today's weight kg" />
+  <input id="waist" type="number" placeholder="Waist inches" />
+  <button class="button secondary" onclick="saveCheckIn()">Save Check-In</button>
+  <p class="small" id="savedMessage"></p>
+</div>
+
+<div class="card">
+  <h2>Food Rules</h2>
+  <p class="small">
+    ✅ Protein first<br>
+    ✅ Drink water before meals<br>
+    ✅ Choose grilled over fried<br>
+    ✅ Stop eating at 7:30 PM<br><br>
+    ❌ No sugary drinks<br>
+    ❌ No random snacks after dinner<br>
+    ❌ Avoid fried sushi, creamy sauces and big takeaway meals
+  </p>
+</div>
+
+  </div>  <script>
+    const reminders = [
+      { time: "06:00", title: "Morning Hydration", body: "Water only. Stay fasted and start strong." },
+      { time: "12:30", title: "First Meal", body: "Fasting window is open. Protein first. Avoid sugary food." },
+      { time: "15:30", title: "Protein Check", body: "Check your protein and water. Stay on target." },
+      { time: "18:30", title: "Final Meal", body: "Final meal. Protein, veg and controlled carbs." },
+      { time: "19:30", title: "Fasting Starts", body: "Kitchen closed. Water only from now." },
+      { time: "20:00", title: "Daily Check-In", body: "Log weight, steps, water and workout." }
+    ];
+
+    let sentToday = JSON.parse(localStorage.getItem("sentToday") || "{}");
+    let currentDate = new Date().toDateString();
+
+    function updateClock() {
+      const now = new Date();
+      const timeString = now.toLocaleTimeString("en-AU", { hour: "2-digit", minute: "2-digit" });
+      document.getElementById("clock").textContent = timeString;
+
+      if (new Date().toDateString() !== currentDate) {
+        sentToday = {};
+        currentDate = new Date().toDateString();
+        localStorage.setItem("sentToday", JSON.stringify(sentToday));
+      }
+
+      updateStatus(now);
+      checkReminders(now);
+    }
+
+    function updateStatus(now) {
+      const minutes = now.getHours() * 60 + now.getMinutes();
+      const firstMeal = 12 * 60 + 30;
+      const fastingStart = 19 * 60 + 30;
+
+      if (minutes < firstMeal) {
+        document.getElementById("currentStatus").textContent = "Fasting Window ⏳";
+        document.getElementById("statusMessage").textContent = "Water, black coffee or zero-calorie drinks only. Hold the line.";
+      } else if (minutes >= firstMeal && minutes < fastingStart) {
+        document.getElementById("currentStatus").textContent = "Eating Window Open 🍽️";
+        document.getElementById("statusMessage").textContent = "Prioritise protein, keep meals controlled and avoid random snacks.";
+      } else {
+        document.getElementById("currentStatus").textContent = "Fasting Started 🔒";
+        document.getElementById("statusMessage").textContent = "Kitchen closed. Water only. Tomorrow starts with discipline.";
+      }
+    }
+
+    function enableNotifications() {
+      if (!("Notification" in window)) {
+        alert("Notifications are not supported on this device/browser.");
+        return;
+      }
+
+      Notification.requestPermission().then(permission => {
+        if (permission === "granted") {
+          new Notification("Lean-Out Coach", {
+            body: "Notifications are on. Stay locked in, Alex 💪"
+          });
+        } else {
+          alert("Notifications were not enabled.");
+        }
+      });
+    }
+
+    function checkReminders(now) {
+      const hh = String(now.getHours()).padStart(2, "0");
+      const mm = String(now.getMinutes()).padStart(2, "0");
+      const current = `${hh}:${mm}`;
+
+      reminders.forEach(reminder => {
+        const key = `${new Date().toDateString()}-${reminder.time}`;
+        if (current === reminder.time && !sentToday[key]) {
+          sendNotification(reminder.title, reminder.body);
+          sentToday[key] = true;
+          localStorage.setItem("sentToday", JSON.stringify(sentToday));
+        }
+      });
+    }
+
+    function sendNotification(title, body) {
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification(title, { body });
+      }
+    }
+
+    function toggleCheck(element) {
+      element.classList.toggle("done");
+    }
+
+    function saveCheckIn() {
+      const weight = document.getElementById("weight").value;
+      const waist = document.getElementById("waist").value;
+      const date = new Date().toLocaleDateString("en-AU");
+
+      if (!weight && !waist) {
+        document.getElementById("savedMessage").textContent = "Add your weight or waist first.";
+        return;
+      }
+
+      const checkIn = { date, weight, waist };
+      localStorage.setItem("latestCheckIn", JSON.stringify(checkIn));
+
+      document.getElementById("savedMessage").textContent = `Saved for ${date}. Keep going.`;
+    }
+
+    updateClock();
+    setInterval(updateClock, 1000);
+  </script></body>
+</html>
