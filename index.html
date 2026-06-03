@@ -218,6 +218,59 @@
     .history-vals { display: flex; gap: 16px; }
     .history-val .label { color: #7a9ab5; font-size: 11px; }
     .history-val .val { font-weight: bold; font-size: 14px; }
+
+    /* Food log */
+    .protein-bar-wrap {
+      margin: 12px 0 4px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 8px;
+      height: 8px;
+      overflow: hidden;
+    }
+    .protein-bar-fill {
+      height: 100%;
+      background: #18d26e;
+      border-radius: 8px;
+      transition: width 0.4s;
+    }
+    .protein-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #b6c7d8;
+      margin-bottom: 10px;
+    }
+    .protein-label span:first-child { font-weight: bold; color: white; }
+    .food-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .food-row input { margin-top: 0; flex: 1; }
+    .food-row input.protein-input { flex: 0 0 90px; }
+    .food-entry {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      gap: 8px;
+    }
+    .food-entry:last-child { border-bottom: none; }
+    .food-entry-left { flex: 1; }
+    .food-entry-name { font-size: 14px; line-height: 1.3; }
+    .food-entry-meta { font-size: 12px; color: #7a9ab5; margin-top: 2px; }
+    .food-delete {
+      background: none;
+      border: none;
+      color: #4a6a85;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 0 4px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .food-delete:hover { color: #ff6b6b; }
   </style>
 </head>
 <body>
@@ -294,6 +347,23 @@
       </div>
     </div>
     <div class="tracker-footer" id="trackerFooter"></div>
+  </div>
+
+  <div class="card">
+    <h2>Food Log</h2>
+    <div class="protein-label">
+      <span id="proteinTotal">0g protein</span>
+      <span>goal: 150g</span>
+    </div>
+    <div class="protein-bar-wrap">
+      <div class="protein-bar-fill" id="proteinBarFill" style="width:0%"></div>
+    </div>
+    <div class="food-row">
+      <input id="foodName" type="text" placeholder="What did you eat?" />
+      <input id="foodProtein" type="number" class="protein-input" placeholder="Protein g" />
+    </div>
+    <button class="button secondary" style="margin-top:10px" onclick="logFood()">Log It</button>
+    <div id="foodLog"></div>
   </div>
 
   <div class="card">
@@ -735,9 +805,65 @@ if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("sw.js").catch(() => {});
 }
 
+// ── Food log ──────────────────────────────────────────────────────────────────
+const FOOD_KEY = "foodLog-" + isoToday();
+
+function getFoodLog() {
+  return JSON.parse(localStorage.getItem(FOOD_KEY) || "[]");
+}
+
+function logFood() {
+  const nameEl    = document.getElementById("foodName");
+  const proteinEl = document.getElementById("foodProtein");
+  const name    = nameEl.value.trim();
+  const protein = parseFloat(proteinEl.value) || 0;
+
+  if (!name) { nameEl.focus(); return; }
+
+  const now = new Date();
+  const time = now.toLocaleTimeString("en-AU", { hour: "2-digit", minute: "2-digit" });
+  const log = getFoodLog();
+  log.push({ id: Date.now(), time, name, protein });
+  localStorage.setItem(FOOD_KEY, JSON.stringify(log));
+
+  nameEl.value = "";
+  proteinEl.value = "";
+  nameEl.focus();
+  renderFoodLog();
+}
+
+function deleteFood(id) {
+  const log = getFoodLog().filter(e => e.id !== id);
+  localStorage.setItem(FOOD_KEY, JSON.stringify(log));
+  renderFoodLog();
+}
+
+function renderFoodLog() {
+  const log = getFoodLog();
+  const totalProtein = log.reduce((sum, e) => sum + (e.protein || 0), 0);
+  const pct = Math.min(100, (totalProtein / 150) * 100);
+
+  document.getElementById("proteinTotal").textContent =
+    totalProtein > 0 ? `${totalProtein}g protein` : "0g protein";
+  document.getElementById("proteinBarFill").style.width = pct + "%";
+
+  const el = document.getElementById("foodLog");
+  if (!log.length) { el.innerHTML = ""; return; }
+
+  el.innerHTML = log.slice().reverse().map(e => `
+    <div class="food-entry">
+      <div class="food-entry-left">
+        <div class="food-entry-name">${e.name}</div>
+        <div class="food-entry-meta">${e.time}${e.protein ? ` · ${e.protein}g protein` : ""}</div>
+      </div>
+      <button class="food-delete" onclick="deleteFood(${e.id})">✕</button>
+    </div>`).join("");
+}
+
 // ── Boot ──────────────────────────────────────────────────────────────────────
 updateNotifButton();
 restoreTracker();
+renderFoodLog();
 renderStreak();
 renderHistory();
 renderChart();
