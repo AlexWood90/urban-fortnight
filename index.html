@@ -1,370 +1,570 @@
-<!DOCTYPE html><html lang="en-AU">
+<!DOCTYPE html>
+<html lang="en-AU">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Alex Lean-Out Coach</title>
+  <title>Lean-Out Coach</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#07111f" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Lean-Out" />
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif;
-    }body {
-  min-height: 100vh;
-  background: linear-gradient(160deg, #07111f, #102a43, #0b1724);
-  color: white;
-  padding: 20px;
-}
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
 
-.app {
-  max-width: 430px;
-  margin: 0 auto;
-}
+    body {
+      min-height: 100vh;
+      background: linear-gradient(160deg, #07111f, #102a43, #0b1724);
+      color: white;
+      padding: 20px 20px 40px;
+    }
 
-.header {
-  text-align: center;
-  margin-bottom: 24px;
-}
+    .app { max-width: 430px; margin: 0 auto; }
 
-.header h1 {
-  font-size: 28px;
-  margin-bottom: 8px;
-}
+    .header { text-align: center; margin-bottom: 16px; }
+    .header h1 { font-size: 28px; margin-bottom: 8px; }
+    .header p { color: #b6c7d8; font-size: 15px; }
 
-.header p {
-  color: #b6c7d8;
-  font-size: 15px;
-}
+    .streak-banner {
+      background: rgba(24, 210, 110, 0.15);
+      border: 1px solid rgba(24, 210, 110, 0.3);
+      border-radius: 14px;
+      padding: 10px 16px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      font-size: 15px;
+      font-weight: bold;
+      color: #67ffab;
+    }
 
-.card {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 20px;
-  padding: 18px;
-  margin-bottom: 16px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-}
+    .card {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 20px;
+      padding: 18px;
+      margin-bottom: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    }
 
-.status {
-  text-align: center;
-}
+    .card h2 { font-size: 18px; margin-bottom: 4px; }
 
-.status h2 {
-  font-size: 21px;
-  margin-bottom: 8px;
-}
+    .status { text-align: center; }
+    .status h2 { font-size: 21px; margin-bottom: 8px; }
+    .status p { color: #d4e4f3; line-height: 1.4; }
 
-.status p {
-  color: #d4e4f3;
-  line-height: 1.4;
-}
+    .time { font-size: 38px; font-weight: bold; margin: 12px 0; }
 
-.time {
-  font-size: 38px;
-  font-weight: bold;
-  margin: 12px 0;
-}
+    .button {
+      width: 100%;
+      border: none;
+      border-radius: 16px;
+      padding: 15px;
+      font-size: 16px;
+      font-weight: bold;
+      background: #18d26e;
+      color: #04130a;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    .button.secondary { background: #1f8cff; color: white; }
 
-.button {
-  width: 100%;
-  border: none;
-  border-radius: 16px;
-  padding: 15px;
-  font-size: 16px;
-  font-weight: bold;
-  background: #18d26e;
-  color: #04130a;
-  margin-top: 10px;
-  cursor: pointer;
-}
+    .schedule-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .schedule-item:last-child { border-bottom: none; }
+    .schedule-left h3 { font-size: 16px; margin-bottom: 4px; }
+    .schedule-left p { color: #b6c7d8; font-size: 13px; }
 
-.button.secondary {
-  background: #1f8cff;
-  color: white;
-}
+    .badge {
+      background: rgba(24, 210, 110, 0.16);
+      color: #67ffab;
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: bold;
+      white-space: nowrap;
+    }
 
-.button.dark {
-  background: rgba(255,255,255,0.12);
-  color: white;
-}
+    .check-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
 
-.schedule-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-}
+    .check {
+      background: rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 14px;
+      text-align: center;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: background 0.15s, border-color 0.15s;
+      user-select: none;
+    }
+    .check.done {
+      background: rgba(24, 210, 110, 0.18);
+      border-color: #18d26e;
+    }
+    .check span { display: block; font-size: 24px; margin-bottom: 6px; }
+    .check .label { font-size: 13px; }
 
-.schedule-item:last-child {
-  border-bottom: none;
-}
+    /* Water tile */
+    .water-tile {
+      background: rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 14px;
+      text-align: center;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.1);
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.15s;
+      user-select: none;
+    }
+    .water-tile.done { border-color: #18d26e; }
+    .water-fill {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: rgba(31, 140, 255, 0.28);
+      transition: height 0.35s ease;
+    }
+    .water-inner { position: relative; z-index: 1; }
+    .water-inner span { display: block; font-size: 24px; margin-bottom: 4px; }
+    .water-amount { font-size: 13px; font-weight: bold; }
+    .water-hint { font-size: 11px; color: #b6c7d8; margin-top: 3px; }
 
-.schedule-left h3 {
-  font-size: 16px;
-  margin-bottom: 4px;
-}
+    .tracker-footer {
+      text-align: center;
+      font-size: 13px;
+      color: #b6c7d8;
+      margin-top: 12px;
+      min-height: 18px;
+    }
 
-.schedule-left p {
-  color: #b6c7d8;
-  font-size: 13px;
-}
+    input {
+      width: 100%;
+      padding: 14px;
+      border-radius: 14px;
+      border: none;
+      margin-top: 10px;
+      font-size: 16px;
+      background: rgba(255,255,255,0.1);
+      color: white;
+    }
+    input::placeholder { color: #7a9ab5; }
 
-.badge {
-  background: rgba(24, 210, 110, 0.16);
-  color: #67ffab;
-  padding: 7px 10px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: bold;
-  white-space: nowrap;
-}
+    .small {
+      color: #b6c7d8;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-top: 8px;
+    }
 
-.check-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-top: 12px;
-}
+    /* Weight chart */
+    .chart-wrap { margin-top: 12px; }
+    svg.chart { display: block; width: 100%; }
+    .no-data { color: #7a9ab5; font-size: 13px; text-align: center; padding: 20px 0; }
 
-.check {
-  background: rgba(255,255,255,0.08);
-  border-radius: 14px;
-  padding: 14px;
-  text-align: center;
-  cursor: pointer;
-  border: 1px solid rgba(255,255,255,0.1);
-}
-
-.check.done {
-  background: rgba(24, 210, 110, 0.18);
-  border-color: #18d26e;
-}
-
-.check span {
-  display: block;
-  font-size: 24px;
-  margin-bottom: 6px;
-}
-
-.small {
-  color: #b6c7d8;
-  font-size: 13px;
-  line-height: 1.5;
-  margin-top: 8px;
-}
-
-input {
-  width: 100%;
-  padding: 14px;
-  border-radius: 14px;
-  border: none;
-  margin-top: 10px;
-  font-size: 16px;
-}
-
+    /* History */
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .history-item:last-child { border-bottom: none; }
+    .history-date { color: #b6c7d8; font-size: 13px; }
+    .history-vals { display: flex; gap: 16px; }
+    .history-val .label { color: #7a9ab5; font-size: 11px; }
+    .history-val .val { font-weight: bold; font-size: 14px; }
   </style>
 </head>
 <body>
-  <div class="app">
-    <div class="header">
-      <h1>Lean-Out Coach 💪</h1>
-      <p>Meal reminders, fasting window, water checks and daily accountability.</p>
-    </div><div class="card status">
-  <h2 id="currentStatus">Loading...</h2>
-  <div class="time" id="clock">--:--</div>
-  <p id="statusMessage">Checking your schedule...</p>
-  <button class="button" onclick="enableNotifications()">Enable Notifications</button>
-  <p class="small">Notifications work best when this app is open or installed as a PWA.</p>
+<div class="app">
+
+  <div class="header">
+    <h1>Lean-Out Coach 💪</h1>
+    <p>Meal reminders, fasting window, water checks and daily accountability.</p>
+  </div>
+
+  <div class="streak-banner" id="streakBanner">
+    🔥 <span id="streakText"></span>
+  </div>
+
+  <div class="card status">
+    <h2 id="currentStatus">Loading...</h2>
+    <div class="time" id="clock">--:--</div>
+    <p id="statusMessage">Checking your schedule...</p>
+    <button class="button" onclick="enableNotifications()">Enable Notifications</button>
+    <p class="small">Install this page as a PWA for the best experience on iPhone or Android.</p>
+  </div>
+
+  <div class="card">
+    <h2>Today's Schedule</h2>
+    <div class="schedule-item">
+      <div class="schedule-left"><h3>Morning Hydration</h3><p>Water only. Stay fasted.</p></div>
+      <div class="badge">6:00 AM</div>
+    </div>
+    <div class="schedule-item">
+      <div class="schedule-left"><h3>First Meal</h3><p>Protein first. Avoid sugary food.</p></div>
+      <div class="badge">12:30 PM</div>
+    </div>
+    <div class="schedule-item">
+      <div class="schedule-left"><h3>Protein Check</h3><p>Snack or meal if protein is low.</p></div>
+      <div class="badge">3:30 PM</div>
+    </div>
+    <div class="schedule-item">
+      <div class="schedule-left"><h3>Final Meal</h3><p>Protein, veg and controlled carbs.</p></div>
+      <div class="badge">6:30 PM</div>
+    </div>
+    <div class="schedule-item">
+      <div class="schedule-left"><h3>Fasting Starts</h3><p>Kitchen closed. Water only.</p></div>
+      <div class="badge">7:30 PM</div>
+    </div>
+    <div class="schedule-item">
+      <div class="schedule-left"><h3>Daily Check-In</h3><p>Weight, steps, water and workout.</p></div>
+      <div class="badge">8:00 PM</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Daily Tracker</h2>
+    <div class="check-grid">
+      <div class="water-tile" id="waterTile" onclick="incrementWater()">
+        <div class="water-fill" id="waterFill" style="height:0%"></div>
+        <div class="water-inner">
+          <span>💧</span>
+          <div class="water-amount" id="waterAmount">0 / 3L</div>
+          <div class="water-hint" id="waterHint">Tap to add 500ml</div>
+        </div>
+      </div>
+      <div class="check" id="proteinCheck" onclick="toggleCheck(this,'protein')">
+        <span>🥩</span><div class="label">Protein Hit</div>
+      </div>
+      <div class="check" id="stepsCheck" onclick="toggleCheck(this,'steps')">
+        <span>🚶</span><div class="label">10k Steps</div>
+      </div>
+      <div class="check" id="workoutCheck" onclick="toggleCheck(this,'workout')">
+        <span>🏋️</span><div class="label">Workout</div>
+      </div>
+    </div>
+    <div class="tracker-footer" id="trackerFooter"></div>
+  </div>
+
+  <div class="card">
+    <h2>Quick Check-In</h2>
+    <input id="weight" type="number" step="0.1" placeholder="Today's weight (kg)" />
+    <input id="waist" type="number" step="0.5" placeholder="Waist (inches)" />
+    <button class="button secondary" onclick="saveCheckIn()">Save Check-In</button>
+    <p class="small" id="savedMessage"></p>
+  </div>
+
+  <div class="card">
+    <h2>Weight Trend</h2>
+    <div class="chart-wrap" id="chartWrap">
+      <p class="no-data" id="chartNoData">Save a few check-ins to see your weight trend.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Check-In History</h2>
+    <div id="historyList"><p class="no-data">No check-ins saved yet.</p></div>
+  </div>
+
+  <div class="card">
+    <h2>Food Rules</h2>
+    <p class="small">
+      ✅ Protein first<br>
+      ✅ Drink water before meals<br>
+      ✅ Choose grilled over fried<br>
+      ✅ Stop eating at 7:30 PM<br><br>
+      ❌ No sugary drinks<br>
+      ❌ No random snacks after dinner<br>
+      ❌ Avoid fried sushi, creamy sauces and big takeaway meals
+    </p>
+  </div>
+
 </div>
+<script>
+// ── Constants ─────────────────────────────────────────────────────────────────
+const reminders = [
+  { time: "06:00", title: "Morning Hydration", body: "Water only. Stay fasted and start strong." },
+  { time: "12:30", title: "First Meal",        body: "Fasting window is open. Protein first. Avoid sugary food." },
+  { time: "15:30", title: "Protein Check",     body: "Check your protein and water. Stay on target." },
+  { time: "18:30", title: "Final Meal",        body: "Final meal. Protein, veg and controlled carbs." },
+  { time: "19:30", title: "Fasting Starts",    body: "Kitchen closed. Water only from now." },
+  { time: "20:00", title: "Daily Check-In",    body: "Log weight, steps, water and workout." }
+];
 
-<div class="card">
-  <h2>Today's Schedule</h2>
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function isoToday() { return new Date().toISOString().slice(0, 10); }
 
-  <div class="schedule-item">
-    <div class="schedule-left">
-      <h3>Morning Hydration</h3>
-      <p>Water only. Stay fasted.</p>
-    </div>
-    <div class="badge">6:00 AM</div>
-  </div>
+function isoOffset(days) {
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  return d.toISOString().slice(0, 10);
+}
 
-  <div class="schedule-item">
-    <div class="schedule-left">
-      <h3>First Meal</h3>
-      <p>Protein first. Avoid sugary food.</p>
-    </div>
-    <div class="badge">12:30 PM</div>
-  </div>
+function fmtDate(iso) {
+  const [y, m, d] = iso.split("-");
+  return `${d}/${m}/${y}`;
+}
 
-  <div class="schedule-item">
-    <div class="schedule-left">
-      <h3>Protein Check</h3>
-      <p>Snack or meal if protein is low.</p>
-    </div>
-    <div class="badge">3:30 PM</div>
-  </div>
+// ── Tracker state (resets daily) ──────────────────────────────────────────────
+const TRACKER_KEY = "tracker-" + isoToday();
+let tracker = JSON.parse(localStorage.getItem(TRACKER_KEY) || '{"water":0,"protein":false,"steps":false,"workout":false}');
 
-  <div class="schedule-item">
-    <div class="schedule-left">
-      <h3>Final Meal</h3>
-      <p>Protein, veg and controlled carbs.</p>
-    </div>
-    <div class="badge">6:30 PM</div>
-  </div>
+function saveTracker() {
+  localStorage.setItem(TRACKER_KEY, JSON.stringify(tracker));
+  maybeRecordStreakDay();
+  renderTrackerFooter();
+}
 
-  <div class="schedule-item">
-    <div class="schedule-left">
-      <h3>Fasting Starts</h3>
-      <p>Kitchen closed. Water only.</p>
-    </div>
-    <div class="badge">7:30 PM</div>
-  </div>
+// ── Water counter ─────────────────────────────────────────────────────────────
+function incrementWater() {
+  tracker.water = tracker.water >= 3 ? 0 : +(tracker.water + 0.5).toFixed(1);
+  saveTracker();
+  renderWater();
+}
 
-  <div class="schedule-item">
-    <div class="schedule-left">
-      <h3>Daily Check-In</h3>
-      <p>Weight, steps, water and workout.</p>
-    </div>
-    <div class="badge">8:00 PM</div>
-  </div>
-</div>
+function renderWater() {
+  const w = tracker.water;
+  const pct = (w / 3) * 100;
+  document.getElementById("waterFill").style.height = pct + "%";
+  document.getElementById("waterAmount").textContent = w + " / 3L";
+  const tile = document.getElementById("waterTile");
+  const hint = document.getElementById("waterHint");
+  if (w >= 3) {
+    tile.classList.add("done");
+    hint.textContent = "Goal reached! Tap to reset";
+  } else {
+    tile.classList.remove("done");
+    const glasses = Math.round((3 - w) / 0.5);
+    hint.textContent = glasses + " glass" + (glasses === 1 ? "" : "es") + " to go";
+  }
+}
 
-<div class="card">
-  <h2>Daily Tracker</h2>
-  <div class="check-grid">
-    <div class="check" onclick="toggleCheck(this)"><span>💧</span>3L Water</div>
-    <div class="check" onclick="toggleCheck(this)"><span>🥩</span>Protein Hit</div>
-    <div class="check" onclick="toggleCheck(this)"><span>🚶</span>10k Steps</div>
-    <div class="check" onclick="toggleCheck(this)"><span>🏋️</span>Workout</div>
-  </div>
-</div>
+// ── Goal toggles ──────────────────────────────────────────────────────────────
+function toggleCheck(el, key) {
+  tracker[key] = !tracker[key];
+  el.classList.toggle("done", tracker[key]);
+  saveTracker();
+}
 
-<div class="card">
-  <h2>Quick Check-In</h2>
-  <input id="weight" type="number" placeholder="Today's weight kg" />
-  <input id="waist" type="number" placeholder="Waist inches" />
-  <button class="button secondary" onclick="saveCheckIn()">Save Check-In</button>
-  <p class="small" id="savedMessage"></p>
-</div>
+function renderTrackerFooter() {
+  const done = [tracker.water >= 3, tracker.protein, tracker.steps, tracker.workout].filter(Boolean).length;
+  const msgs = ["", "Good start — keep going!", "Halfway there!", "Almost done!", "All goals hit today 🏆"];
+  document.getElementById("trackerFooter").textContent = msgs[done];
+}
 
-<div class="card">
-  <h2>Food Rules</h2>
-  <p class="small">
-    ✅ Protein first<br>
-    ✅ Drink water before meals<br>
-    ✅ Choose grilled over fried<br>
-    ✅ Stop eating at 7:30 PM<br><br>
-    ❌ No sugary drinks<br>
-    ❌ No random snacks after dinner<br>
-    ❌ Avoid fried sushi, creamy sauces and big takeaway meals
-  </p>
-</div>
+function restoreTracker() {
+  renderWater();
+  document.getElementById("proteinCheck").classList.toggle("done", tracker.protein);
+  document.getElementById("stepsCheck").classList.toggle("done", tracker.steps);
+  document.getElementById("workoutCheck").classList.toggle("done", tracker.workout);
+  renderTrackerFooter();
+}
 
-  </div>  <script>
-    const reminders = [
-      { time: "06:00", title: "Morning Hydration", body: "Water only. Stay fasted and start strong." },
-      { time: "12:30", title: "First Meal", body: "Fasting window is open. Protein first. Avoid sugary food." },
-      { time: "15:30", title: "Protein Check", body: "Check your protein and water. Stay on target." },
-      { time: "18:30", title: "Final Meal", body: "Final meal. Protein, veg and controlled carbs." },
-      { time: "19:30", title: "Fasting Starts", body: "Kitchen closed. Water only from now." },
-      { time: "20:00", title: "Daily Check-In", body: "Log weight, steps, water and workout." }
-    ];
+// ── Streaks ───────────────────────────────────────────────────────────────────
+function maybeRecordStreakDay() {
+  const allDone = tracker.water >= 3 && tracker.protein && tracker.steps && tracker.workout;
+  if (!allDone) return;
+  const days = new Set(JSON.parse(localStorage.getItem("streakDays") || "[]"));
+  const today = isoToday();
+  if (!days.has(today)) {
+    days.add(today);
+    localStorage.setItem("streakDays", JSON.stringify([...days]));
+    renderStreak();
+  }
+}
 
-    let sentToday = JSON.parse(localStorage.getItem("sentToday") || "{}");
-    let currentDate = new Date().toDateString();
+function calcStreak() {
+  const days = new Set(JSON.parse(localStorage.getItem("streakDays") || "[]"));
+  let streak = 0;
+  let i = 0;
+  while (days.has(isoOffset(i))) { streak++; i++; }
+  return streak;
+}
 
-    function updateClock() {
-      const now = new Date();
-      const timeString = now.toLocaleTimeString("en-AU", { hour: "2-digit", minute: "2-digit" });
-      document.getElementById("clock").textContent = timeString;
+function renderStreak() {
+  const n = calcStreak();
+  const banner = document.getElementById("streakBanner");
+  if (n === 0) {
+    banner.style.display = "none";
+  } else {
+    banner.style.display = "flex";
+    document.getElementById("streakText").textContent =
+      n === 1 ? "1 day streak — keep it going!" : `${n} day streak — you're on fire!`;
+  }
+}
 
-      if (new Date().toDateString() !== currentDate) {
-        sentToday = {};
-        currentDate = new Date().toDateString();
-        localStorage.setItem("sentToday", JSON.stringify(sentToday));
-      }
+// ── Check-ins ─────────────────────────────────────────────────────────────────
+function getCheckIns() {
+  return JSON.parse(localStorage.getItem("checkIns") || "[]");
+}
 
-      updateStatus(now);
-      checkReminders(now);
+function saveCheckIn() {
+  const weight = parseFloat(document.getElementById("weight").value) || null;
+  const waist  = parseFloat(document.getElementById("waist").value)  || null;
+  const msg = document.getElementById("savedMessage");
+
+  if (!weight && !waist) { msg.textContent = "Add your weight or waist first."; return; }
+
+  const today = isoToday();
+  const all = getCheckIns();
+  const idx = all.findIndex(c => c.date === today);
+  const entry = { date: today, weight, waist };
+  if (idx >= 0) all[idx] = entry; else all.push(entry);
+  all.sort((a, b) => a.date.localeCompare(b.date));
+  localStorage.setItem("checkIns", JSON.stringify(all));
+
+  msg.textContent = `Saved for ${fmtDate(today)}. Keep going.`;
+  renderHistory();
+  renderChart();
+}
+
+// ── History ───────────────────────────────────────────────────────────────────
+function renderHistory() {
+  const all = getCheckIns().slice().reverse().slice(0, 14);
+  const el = document.getElementById("historyList");
+  if (!all.length) { el.innerHTML = '<p class="no-data">No check-ins saved yet.</p>'; return; }
+  el.innerHTML = all.map(c => `
+    <div class="history-item">
+      <div class="history-date">${fmtDate(c.date)}</div>
+      <div class="history-vals">
+        ${c.weight != null ? `<div class="history-val"><div class="label">Weight</div><div class="val">${c.weight} kg</div></div>` : ""}
+        ${c.waist  != null ? `<div class="history-val"><div class="label">Waist</div><div class="val">${c.waist}"</div></div>` : ""}
+      </div>
+    </div>`).join("");
+}
+
+// ── Weight chart ──────────────────────────────────────────────────────────────
+function renderChart() {
+  const data = getCheckIns().filter(c => c.weight != null).slice(-14);
+  const noData = document.getElementById("chartNoData");
+  const wrap = document.getElementById("chartWrap");
+  wrap.querySelector("svg")?.remove();
+
+  if (data.length < 2) { noData.style.display = "block"; return; }
+  noData.style.display = "none";
+
+  const W = 360, H = 130;
+  const PAD = { top: 16, right: 12, bottom: 30, left: 42 };
+  const vals = data.map(c => c.weight);
+  const lo = Math.min(...vals), hi = Math.max(...vals);
+  const rng = hi - lo || 1;
+
+  const xOf = i => PAD.left + (i / (data.length - 1)) * (W - PAD.left - PAD.right);
+  const yOf = v => PAD.top + ((hi - v) / rng) * (H - PAD.top - PAD.bottom);
+
+  const pts = data.map((c, i) => `${xOf(i)},${yOf(c.weight)}`).join(" ");
+  const floor = H - PAD.bottom;
+  const area = `M${xOf(0)},${floor} ` + data.map((c, i) => `L${xOf(i)},${yOf(c.weight)}`).join(" ") + ` L${xOf(data.length-1)},${floor} Z`;
+
+  const labelIdxs = Array.from(new Set([0, Math.floor((data.length - 1) / 2), data.length - 1]));
+  const xLabels = labelIdxs.map(i =>
+    `<text x="${xOf(i)}" y="${floor + 14}" text-anchor="middle" fill="#7a9ab5" font-size="9">${fmtDate(data[i].date).slice(0,5)}</text>`
+  ).join("");
+
+  const yTicks = [lo, (lo + hi) / 2, hi];
+  const yLabels = yTicks.map(v =>
+    `<text x="${PAD.left - 6}" y="${yOf(v) + 4}" text-anchor="end" fill="#7a9ab5" font-size="9">${v.toFixed(1)}</text>`
+  ).join("");
+
+  const dots = data.map((c, i) =>
+    `<circle cx="${xOf(i)}" cy="${yOf(c.weight)}" r="3.5" fill="#1f8cff"/>`
+  ).join("");
+
+  wrap.insertAdjacentHTML("beforeend", `
+    <svg class="chart" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#1f8cff" stop-opacity="0.3"/>
+          <stop offset="100%" stop-color="#1f8cff" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <path d="${area}" fill="url(#g)"/>
+      <polyline points="${pts}" fill="none" stroke="#1f8cff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      ${dots}${xLabels}${yLabels}
+    </svg>`);
+}
+
+// ── Clock & fasting status ────────────────────────────────────────────────────
+let sentToday = JSON.parse(localStorage.getItem("sentToday") || "{}");
+let clockDateStr = new Date().toDateString();
+
+function updateClock() {
+  const now = new Date();
+  document.getElementById("clock").textContent =
+    now.toLocaleTimeString("en-AU", { hour: "2-digit", minute: "2-digit" });
+
+  if (now.toDateString() !== clockDateStr) {
+    sentToday = {};
+    clockDateStr = now.toDateString();
+    localStorage.setItem("sentToday", JSON.stringify(sentToday));
+  }
+
+  const m = now.getHours() * 60 + now.getMinutes();
+  const statusEl = document.getElementById("currentStatus");
+  const msgEl    = document.getElementById("statusMessage");
+  if (m < 12 * 60 + 30) {
+    statusEl.textContent = "Fasting Window ⏳";
+    msgEl.textContent = "Water, black coffee or zero-calorie drinks only. Hold the line.";
+  } else if (m < 19 * 60 + 30) {
+    statusEl.textContent = "Eating Window Open 🍽️";
+    msgEl.textContent = "Prioritise protein, keep meals controlled and avoid random snacks.";
+  } else {
+    statusEl.textContent = "Fasting Started 🔒";
+    msgEl.textContent = "Kitchen closed. Water only. Tomorrow starts with discipline.";
+  }
+
+  checkReminders(now);
+}
+
+// ── Notifications ─────────────────────────────────────────────────────────────
+function enableNotifications() {
+  if (!("Notification" in window)) { alert("Notifications are not supported on this browser."); return; }
+  Notification.requestPermission().then(p => {
+    if (p === "granted") new Notification("Lean-Out Coach", { body: "Notifications are on. Stay locked in, Alex 💪" });
+    else alert("Notifications were not enabled.");
+  });
+}
+
+function checkReminders(now) {
+  const hh = String(now.getHours()).padStart(2, "0");
+  const mm = String(now.getMinutes()).padStart(2, "0");
+  const cur = `${hh}:${mm}`;
+  reminders.forEach(r => {
+    const key = `${now.toDateString()}-${r.time}`;
+    if (cur === r.time && !sentToday[key]) {
+      if (Notification.permission === "granted") new Notification(r.title, { body: r.body });
+      sentToday[key] = true;
+      localStorage.setItem("sentToday", JSON.stringify(sentToday));
     }
+  });
+}
 
-    function updateStatus(now) {
-      const minutes = now.getHours() * 60 + now.getMinutes();
-      const firstMeal = 12 * 60 + 30;
-      const fastingStart = 19 * 60 + 30;
+// ── Service Worker ────────────────────────────────────────────────────────────
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
 
-      if (minutes < firstMeal) {
-        document.getElementById("currentStatus").textContent = "Fasting Window ⏳";
-        document.getElementById("statusMessage").textContent = "Water, black coffee or zero-calorie drinks only. Hold the line.";
-      } else if (minutes >= firstMeal && minutes < fastingStart) {
-        document.getElementById("currentStatus").textContent = "Eating Window Open 🍽️";
-        document.getElementById("statusMessage").textContent = "Prioritise protein, keep meals controlled and avoid random snacks.";
-      } else {
-        document.getElementById("currentStatus").textContent = "Fasting Started 🔒";
-        document.getElementById("statusMessage").textContent = "Kitchen closed. Water only. Tomorrow starts with discipline.";
-      }
-    }
-
-    function enableNotifications() {
-      if (!("Notification" in window)) {
-        alert("Notifications are not supported on this device/browser.");
-        return;
-      }
-
-      Notification.requestPermission().then(permission => {
-        if (permission === "granted") {
-          new Notification("Lean-Out Coach", {
-            body: "Notifications are on. Stay locked in, Alex 💪"
-          });
-        } else {
-          alert("Notifications were not enabled.");
-        }
-      });
-    }
-
-    function checkReminders(now) {
-      const hh = String(now.getHours()).padStart(2, "0");
-      const mm = String(now.getMinutes()).padStart(2, "0");
-      const current = `${hh}:${mm}`;
-
-      reminders.forEach(reminder => {
-        const key = `${new Date().toDateString()}-${reminder.time}`;
-        if (current === reminder.time && !sentToday[key]) {
-          sendNotification(reminder.title, reminder.body);
-          sentToday[key] = true;
-          localStorage.setItem("sentToday", JSON.stringify(sentToday));
-        }
-      });
-    }
-
-    function sendNotification(title, body) {
-      if ("Notification" in window && Notification.permission === "granted") {
-        new Notification(title, { body });
-      }
-    }
-
-    function toggleCheck(element) {
-      element.classList.toggle("done");
-    }
-
-    function saveCheckIn() {
-      const weight = document.getElementById("weight").value;
-      const waist = document.getElementById("waist").value;
-      const date = new Date().toLocaleDateString("en-AU");
-
-      if (!weight && !waist) {
-        document.getElementById("savedMessage").textContent = "Add your weight or waist first.";
-        return;
-      }
-
-      const checkIn = { date, weight, waist };
-      localStorage.setItem("latestCheckIn", JSON.stringify(checkIn));
-
-      document.getElementById("savedMessage").textContent = `Saved for ${date}. Keep going.`;
-    }
-
-    updateClock();
-    setInterval(updateClock, 1000);
-  </script></body>
+// ── Boot ──────────────────────────────────────────────────────────────────────
+restoreTracker();
+renderStreak();
+renderHistory();
+renderChart();
+updateClock();
+setInterval(updateClock, 1000);
+</script>
+</body>
 </html>

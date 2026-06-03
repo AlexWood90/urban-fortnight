@@ -1,0 +1,17 @@
+{
+  "name": "Lean-Out Coach",
+  "short_name": "Lean-Out",
+  "description": "Fasting tracker, meal reminders and daily accountability.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#07111f",
+  "theme_color": "#07111f",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
