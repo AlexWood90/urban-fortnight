@@ -141,6 +141,38 @@
     .water-amount { font-size: 13px; font-weight: bold; }
     .water-hint { font-size: 11px; color: #b6c7d8; margin-top: 3px; }
 
+    /* Step tile */
+    .step-tile {
+      background: rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 12px 14px 10px;
+      text-align: center;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: background 0.15s, border-color 0.15s;
+      user-select: none;
+    }
+    .step-tile.done {
+      background: rgba(24, 210, 110, 0.18);
+      border-color: #18d26e;
+    }
+    .step-tile.counting { border-color: #1f8cff; }
+    .step-icon { font-size: 22px; display: block; margin-bottom: 3px; }
+    .step-num { font-size: 17px; font-weight: bold; line-height: 1.1; }
+    .step-sub { font-size: 10px; color: #b6c7d8; margin-bottom: 7px; }
+    .step-bar-track {
+      height: 4px;
+      background: rgba(255,255,255,0.12);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .step-bar-fill {
+      height: 100%;
+      background: #18d26e;
+      border-radius: 2px;
+      transition: width 0.35s;
+    }
+
     .tracker-footer {
       text-align: center;
       font-size: 13px;
@@ -250,8 +282,11 @@
       <div class="check" id="proteinCheck" onclick="toggleCheck(this,'protein')">
         <span>🥩</span><div class="label">Protein Hit</div>
       </div>
-      <div class="check" id="stepsCheck" onclick="toggleCheck(this,'steps')">
-        <span>🚶</span><div class="label">10k Steps</div>
+      <div class="step-tile" id="stepTile" onclick="handleStepTap()">
+        <span class="step-icon">🚶</span>
+        <div class="step-num" id="stepNum">0</div>
+        <div class="step-sub" id="stepSub">/ 10,000 steps</div>
+        <div class="step-bar-track"><div class="step-bar-fill" id="stepBarFill" style="width:0%"></div></div>
       </div>
       <div class="check" id="workoutCheck" onclick="toggleCheck(this,'workout')">
         <span>🏋️</span><div class="label">Workout</div>
@@ -321,7 +356,9 @@ function fmtDate(iso) {
 
 // ── Tracker state (resets daily) ──────────────────────────────────────────────
 const TRACKER_KEY = "tracker-" + isoToday();
-let tracker = JSON.parse(localStorage.getItem(TRACKER_KEY) || '{"water":0,"protein":false,"steps":false,"workout":false}');
+let tracker = JSON.parse(localStorage.getItem(TRACKER_KEY) || '{"water":0,"protein":false,"steps":0,"workout":false}');
+// migrate boolean steps from older builds
+if (typeof tracker.steps === "boolean") tracker.steps = tracker.steps ? 10000 : 0;
 
 function saveTracker() {
   localStorage.setItem(TRACKER_KEY, JSON.stringify(tracker));
@@ -353,6 +390,98 @@ function renderWater() {
   }
 }
 
+// ── Step counter ──────────────────────────────────────────────────────────────
+const stepCounter = {
+  active: false,
+  lastPeak: false,
+  handler: null,
+  PEAK: 12.5,
+  VALLEY: 9.5,
+
+  async start() {
+    if (typeof DeviceMotionEvent !== "undefined" &&
+        typeof DeviceMotionEvent.requestPermission === "function") {
+      const perm = await DeviceMotionEvent.requestPermission().catch(() => "denied");
+      if (perm !== "granted") return false;
+    }
+    if (!("DeviceMotionEvent" in window)) return false;
+    this.handler = e => this._onMotion(e);
+    window.addEventListener("devicemotion", this.handler, { passive: true });
+    this.active = true;
+    return true;
+  },
+
+  stop() {
+    if (this.handler) window.removeEventListener("devicemotion", this.handler);
+    this.handler = null;
+    this.active = false;
+  },
+
+  _onMotion(e) {
+    const a = e.accelerationIncludingGravity;
+    if (!a || a.x == null) return;
+    const mag = Math.sqrt(a.x * a.x + a.y * a.y + a.z * a.z);
+    if (mag > this.PEAK && !this.lastPeak) {
+      this.lastPeak = true;
+    } else if (mag < this.VALLEY && this.lastPeak) {
+      this.lastPeak = false;
+      tracker.steps = (tracker.steps || 0) + 1;
+      saveTracker();
+      renderSteps();
+    }
+  }
+};
+
+async function handleStepTap() {
+  if (!("DeviceMotionEvent" in window)) {
+    // Desktop fallback: manual +500 per tap
+    tracker.steps = Math.min(10000, (tracker.steps || 0) + 500);
+    saveTracker();
+    renderSteps();
+    return;
+  }
+  if (stepCounter.active) {
+    stepCounter.stop();
+  } else {
+    const ok = await stepCounter.start();
+    if (!ok) alert("Motion access is required to count steps. Allow it in your browser settings and try again.");
+  }
+  renderStepTileState();
+}
+
+function renderSteps() {
+  const n = tracker.steps || 0;
+  const pct = Math.min(100, (n / 10000) * 100);
+  document.getElementById("stepNum").textContent = n.toLocaleString();
+  document.getElementById("stepBarFill").style.width = pct + "%";
+  const tile = document.getElementById("stepTile");
+  const sub  = document.getElementById("stepSub");
+  if (n >= 10000) {
+    tile.classList.add("done");
+    tile.classList.remove("counting");
+    sub.textContent = "Goal reached! 🎉";
+    stepCounter.stop();
+  } else {
+    tile.classList.remove("done");
+    const left = (10000 - n).toLocaleString();
+    sub.textContent = stepCounter.active ? `${left} to go — counting` : `/ 10,000 steps`;
+  }
+}
+
+function renderStepTileState() {
+  const tile = document.getElementById("stepTile");
+  const sub  = document.getElementById("stepSub");
+  if (stepCounter.active) {
+    tile.classList.add("counting");
+    const left = (10000 - (tracker.steps || 0)).toLocaleString();
+    sub.textContent = `${left} to go — counting`;
+  } else {
+    tile.classList.remove("counting");
+    const n = tracker.steps || 0;
+    sub.textContent = n >= 10000 ? "Goal reached! 🎉" : "/ 10,000 steps";
+  }
+}
+
 // ── Goal toggles ──────────────────────────────────────────────────────────────
 function toggleCheck(el, key) {
   tracker[key] = !tracker[key];
@@ -361,22 +490,22 @@ function toggleCheck(el, key) {
 }
 
 function renderTrackerFooter() {
-  const done = [tracker.water >= 3, tracker.protein, tracker.steps, tracker.workout].filter(Boolean).length;
+  const done = [tracker.water >= 3, tracker.protein, tracker.steps >= 10000, tracker.workout].filter(Boolean).length;
   const msgs = ["", "Good start — keep going!", "Halfway there!", "Almost done!", "All goals hit today 🏆"];
   document.getElementById("trackerFooter").textContent = msgs[done];
 }
 
 function restoreTracker() {
   renderWater();
+  renderSteps();
   document.getElementById("proteinCheck").classList.toggle("done", tracker.protein);
-  document.getElementById("stepsCheck").classList.toggle("done", tracker.steps);
   document.getElementById("workoutCheck").classList.toggle("done", tracker.workout);
   renderTrackerFooter();
 }
 
 // ── Streaks ───────────────────────────────────────────────────────────────────
 function maybeRecordStreakDay() {
-  const allDone = tracker.water >= 3 && tracker.protein && tracker.steps && tracker.workout;
+  const allDone = tracker.water >= 3 && tracker.protein && tracker.steps >= 10000 && tracker.workout;
   if (!allDone) return;
   const days = new Set(JSON.parse(localStorage.getItem("streakDays") || "[]"));
   const today = isoToday();
