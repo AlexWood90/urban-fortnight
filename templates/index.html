@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Team Planner</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <div class="logo">Team Planner</div>
+    <nav>
+      <button data-tab="dashboard">Dashboard</button>
+      <button data-tab="roster">Roster Countdown</button>
+      <button data-tab="money">Money Tracker</button>
+      <button data-tab="fitness">Fitness Tracker</button>
+      <button data-tab="packing">Packing Checklist</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="tab-dashboard" class="tab-panel"></section>
+    <section id="tab-roster"    class="tab-panel"></section>
+    <section id="tab-money"     class="tab-panel"></section>
+    <section id="tab-fitness"   class="tab-panel"></section>
+    <section id="tab-packing"   class="tab-panel"></section>
+  </main>
+
+  <div id="toast-container"></div>
+  <script src="/static/app.js"></script>
+</body>
+</html>
