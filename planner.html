@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Team Planner</title>
+  <style>
+    :root {
+      --primary:      #1e3a5f;
+      --accent:       #3b82f6;
+      --success:      #10b981;
+      --warning:      #f59e0b;
+      --danger:       #ef4444;
+      --bg:           #f1f5f9;
+      --card:         #ffffff;
+      --text:         #1e293b;
+      --muted:        #64748b;
+      --border:       #e2e8f0;
+      --radius:       8px;
+      --shadow:       0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+    /* Header */
+    header{background:var(--primary);color:#fff;padding:0 24px;display:flex;align-items:center;gap:28px;height:56px;position:sticky;top:0;z-index:50;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+    .logo{font-weight:700;font-size:17px;white-space:nowrap;letter-spacing:-.3px}
+    nav{display:flex;gap:2px;overflow-x:auto;flex:1}
+    nav::-webkit-scrollbar{display:none}
+    nav button{background:transparent;border:none;color:rgba(255,255,255,.65);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:14px;white-space:nowrap;transition:background .15s,color .15s;font-weight:500}
+    nav button:hover{color:#fff;background:rgba(255,255,255,.12)}
+    nav button.active{color:#fff;background:rgba(255,255,255,.2)}
+
+    /* Layout */
+    main{max-width:1100px;margin:0 auto;padding:28px 20px 60px}
+    .tab-panel{display:none}
+    .tab-panel.active{display:block}
+
+    /* Cards */
+    .card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:20px;box-shadow:var(--shadow)}
+    .card-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:8px}
+
+    /* Section header */
+    .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+    .section-header h2{font-size:22px;font-weight:700;letter-spacing:-.3px}
+
+    /* Dashboard */
+    .dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+    .stat-value{font-size:40px;font-weight:800;line-height:1;margin-bottom:4px}
+    .stat-sub{font-size:13px;color:var(--muted)}
+    .countdown-big{font-size:64px;font-weight:800;color:var(--accent);line-height:1}
+    .countdown-label{font-size:14px;color:var(--muted);margin-top:4px}
+
+    /* Buttons */
+    .btn{display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border-radius:6px;border:none;cursor:pointer;font-size:14px;font-weight:500;transition:filter .15s,background .15s;white-space:nowrap}
+    .btn:hover{filter:brightness(.93)}
+    .btn-primary{background:var(--accent);color:#fff}
+    .btn-danger{background:var(--danger);color:#fff}
+    .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
+    .btn-ghost:hover{background:var(--bg);filter:none}
+    .btn-sm{padding:4px 10px;font-size:13px}
+    .btn-xs{padding:2px 7px;font-size:12px}
+
+    /* Forms */
+    .form-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:flex-end}
+    .form-row:last-child{margin-bottom:0}
+    input,select,textarea{border:1px solid var(--border);border-radius:6px;padding:8px 12px;font-size:14px;color:var(--text);background:#fff;outline:none;transition:border-color .15s,box-shadow .15s}
+    input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.12)}
+    input[type="date"]{cursor:pointer}
+    input[type="checkbox"]{width:17px;height:17px;cursor:pointer;accent-color:var(--success);flex-shrink:0}
+    input[type="number"]{-moz-appearance:textfield}
+
+    /* Progress bar */
+    .progress-bar{height:8px;background:var(--border);border-radius:4px;overflow:hidden}
+    .pbar-fill{height:100%;border-radius:4px;transition:width .4s ease}
+    .pbar-blue{background:var(--accent)}
+    .pbar-green{background:var(--success)}
+    .pbar-warning{background:var(--warning)}
+    .pbar-danger{background:var(--danger)}
+
+    /* Tables */
+    .table-wrap{overflow-x:auto}
+    table{width:100%;border-collapse:collapse}
+    th{text-align:left;padding:8px 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);border-bottom:2px solid var(--border);white-space:nowrap}
+    td{padding:10px 12px;border-bottom:1px solid var(--border);font-size:14px;vertical-align:middle}
+    tr:last-child td{border-bottom:none}
+    tbody tr:hover td{background:#f8fafc}
+
+    /* Badges */
+    .badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:12px;font-weight:600}
+    .badge-blue{background:#dbeafe;color:#1d4ed8}
+    .badge-gray{background:#f1f5f9;color:#475569}
+
+    /* Divider */
+    .divider{border:none;border-top:1px solid var(--border);margin:24px 0}
+
+    /* Empty state */
+    .empty-state{text-align:center;padding:36px 20px;color:var(--muted);font-size:14px}
+
+    /* Mini stats */
+    .stats-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+    .stat-mini{flex:1;min-width:100px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;text-align:center;box-shadow:var(--shadow)}
+    .stat-mini-val{font-size:26px;font-weight:800;color:var(--accent)}
+    .stat-mini-label{font-size:12px;color:var(--muted);margin-top:2px}
+
+    /* Event cards */
+    .event-list{display:flex;flex-direction:column;gap:12px}
+    .event-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+    .event-card.is-next{border-color:var(--accent);background:#eff6ff}
+    .event-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+    .event-name{font-weight:600;font-size:15px}
+    .event-date-sub{font-size:13px;color:var(--muted);margin-top:2px}
+    .event-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+    .event-cd-num{font-size:28px;font-weight:800;color:var(--accent);line-height:1;text-align:right}
+    .event-cd-label{font-size:11px;color:var(--muted);text-align:right;margin-top:2px}
+
+    /* Roster */
+    .roster-body{margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+    .roster-member{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)}
+    .roster-member:last-of-type{border-bottom:none}
+    .roster-name{flex:1;font-size:14px}
+
+    /* Budget */
+    .cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin-bottom:20px}
+    .cat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow)}
+    .cat-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+    .cat-name{font-weight:600;font-size:14px}
+    .cat-amount{font-size:13px;color:var(--muted);margin-bottom:8px}
+
+    /* Two-col form grid */
+    .form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+    @media(max-width:600px){.form-grid-2{grid-template-columns:1fr}}
+
+    /* Checklist */
+    .checklist-section{margin-bottom:20px}
+    .checklist-cat-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:6px}
+    .checklist-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+    .checklist-item:last-child{border-bottom:none}
+    .item-name{flex:1;font-size:14px}
+    .item-name.done{text-decoration:line-through;color:var(--muted)}
+
+    /* Toast */
+    #toast-container{position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:8px;z-index:200}
+    .toast{background:#1e293b;color:#fff;padding:10px 16px;border-radius:8px;font-size:14px;max-width:280px;opacity:0;transform:translateY(6px);transition:opacity .2s,transform .2s;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+    .toast.show{opacity:1;transform:translateY(0)}
+    .toast.ok{background:#166534}
+    .toast.err{background:#991b1b}
+
+    @media(max-width:520px){
+      header{height:auto;padding:12px 16px;flex-direction:column;align-items:flex-start}
+      .stat-value{font-size:30px}
+      .countdown-big{font-size:48px}
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Team Planner</div>
+  <nav>
+    <button data-tab="dashboard">Dashboard</button>
+    <button data-tab="roster">Roster Countdown</button>
+    <button data-tab="money">Money Tracker</button>
+    <button data-tab="fitness">Fitness Tracker</button>
+    <button data-tab="packing">Packing Checklist</button>
+  </nav>
+</header>
+
+<main>
+  <section id="tab-dashboard" class="tab-panel"></section>
+  <section id="tab-roster"    class="tab-panel"></section>
+  <section id="tab-money"     class="tab-panel"></section>
+  <section id="tab-fitness"   class="tab-panel"></section>
+  <section id="tab-packing"   class="tab-panel"></section>
+</main>
+
+<div id="toast-container"></div>
+
+<script>
+// ── LocalStorage DB ───────────────────────────────────────────────────────────
+const db = {
+  _r(k)    { return JSON.parse(localStorage.getItem(k) || '[]'); },
+  _w(k, v) { localStorage.setItem(k, JSON.stringify(v)); },
+  _id(k)   { const n = (parseInt(localStorage.getItem(k+'_n')||'0'))+1; localStorage.setItem(k+'_n',n); return n; },
+
+  getEvents()     { return this._r('tp_ev').sort((a,b)=>a.event_date.localeCompare(b.event_date)); },
+  addEvent(o)     { const l=this._r('tp_ev'); const it={id:this._id('tp_ev'),...o,created_at:nowIso()}; l.push(it); this._w('tp_ev',l); return it; },
+  deleteEvent(id) { this._w('tp_ev',this._r('tp_ev').filter(e=>e.id!==id)); this._w('tp_ro',this._r('tp_ro').filter(m=>m.event_id!==id)); },
+
+  getRoster(eid)       { return this._r('tp_ro').filter(m=>m.event_id===eid).sort((a,b)=>a.id-b.id); },
+  addMember(o)         { const l=this._r('tp_ro'); const it={id:this._id('tp_ro'),...o}; l.push(it); this._w('tp_ro',l); return it; },
+  updateMember(id,p)   { const l=this._r('tp_ro').map(m=>m.id===id?{...m,...p}:m); this._w('tp_ro',l); return l.find(m=>m.id===id); },
+  deleteMember(id)     { this._w('tp_ro',this._r('tp_ro').filter(m=>m.id!==id)); },
+
+  getCategories()    { return this._r('tp_cats').sort((a,b)=>a.id-b.id); },
+  addCategory(o)     { const l=this._r('tp_cats'); const it={id:this._id('tp_cats'),...o}; l.push(it); this._w('tp_cats',l); return it; },
+  deleteCategory(id) { this._w('tp_cats',this._r('tp_cats').filter(c=>c.id!==id)); this._w('tp_exp',this._r('tp_exp').map(e=>e.category_id===id?{...e,category_id:null}:e)); },
+
+  getExpenses()    { return this._r('tp_exp').sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id); },
+  addExpense(o)    { const l=this._r('tp_exp'); const it={id:this._id('tp_exp'),...o,created_at:nowIso()}; l.push(it); this._w('tp_exp',l); return it; },
+  deleteExpense(id){ this._w('tp_exp',this._r('tp_exp').filter(e=>e.id!==id)); },
+
+  getWorkouts()    { return this._r('tp_wo').sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id); },
+  addWorkout(o)    { const l=this._r('tp_wo'); const it={id:this._id('tp_wo'),...o,created_at:nowIso()}; l.push(it); this._w('tp_wo',l); return it; },
+  deleteWorkout(id){ this._w('tp_wo',this._r('tp_wo').filter(w=>w.id!==id)); },
+
+  getChecklist()    { return this._r('tp_ck').sort((a,b)=>a.category.localeCompare(b.category)||a.id-b.id); },
+  addCheckItem(o)   { const l=this._r('tp_ck'); const it={id:this._id('tp_ck'),...o,packed:0,created_at:nowIso()}; l.push(it); this._w('tp_ck',l); return it; },
+  toggleItem(id)    { this._w('tp_ck',this._r('tp_ck').map(i=>i.id===id?{...i,packed:i.packed?0:1}:i)); },
+  deleteItem(id)    { this._w('tp_ck',this._r('tp_ck').filter(i=>i.id!==id)); },
+  clearChecklist()  { this._w('tp_ck',[]); },
+};
+
+// Helpers for expense lookups
+function catSpent(catId)  { return db.getExpenses().filter(e=>e.category_id===catId).reduce((s,e)=>s+e.amount,0); }
+function catName(catId)   { if(!catId) return 'Uncategorized'; const c=db.getCategories().find(c=>c.id===catId); return c?c.name:'Uncategorized'; }
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
+function nowIso()    { return new Date().toISOString(); }
+function todayStr()  { return new Date().toISOString().split('T')[0]; }
+
+function weekStart() {
+  const d = new Date(); d.setHours(0,0,0,0);
+  d.setDate(d.getDate() - (d.getDay()===0 ? 6 : d.getDay()-1));
+  return d.toISOString().split('T')[0];
+}
+
+function esc(s) {
+  return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fmtDate(s) {
+  if (!s) return '—';
+  return new Date(s+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+}
+
+function daysUntil(s) {
+  const t = new Date(); t.setHours(0,0,0,0);
+  return Math.round((new Date(s+'T00:00:00') - t) / 86400000);
+}
+
+function cdLabel(d) {
+  if (d===0)  return 'Today!';
+  if (d===1)  return '1 day to go';
+  if (d>1)    return `${d} days to go`;
+  if (d===-1) return '1 day ago';
+  return `${Math.abs(d)} days ago`;
+}
+
+function pbarClass(pct) {
+  return pct>90 ? 'pbar-danger' : pct>70 ? 'pbar-warning' : 'pbar-blue';
+}
+
+function toast(msg, type='') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  document.getElementById('toast-container').appendChild(el);
+  requestAnimationFrame(()=>el.classList.add('show'));
+  setTimeout(()=>{ el.classList.remove('show'); setTimeout(()=>el.remove(),250); }, 2800);
+}
+
+// ── Tab routing ───────────────────────────────────────────────────────────────
+const TABS = { dashboard:loadDashboard, roster:loadRoster, money:loadMoney, fitness:loadFitness, packing:loadPacking };
+
+function showTab(name) {
+  if (!TABS[name]) name='dashboard';
+  document.querySelectorAll('.tab-panel').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('[data-tab]').forEach(el=>el.classList.remove('active'));
+  document.getElementById(`tab-${name}`).classList.add('active');
+  document.querySelector(`[data-tab="${name}"]`).classList.add('active');
+  TABS[name]();
+  history.replaceState(null,'',`#${name}`);
+}
+
+document.querySelectorAll('[data-tab]').forEach(btn=>btn.addEventListener('click',()=>showTab(btn.dataset.tab)));
+showTab(location.hash.slice(1)||'dashboard');
+
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+function loadDashboard() {
+  const el = document.getElementById('tab-dashboard');
+  const today = todayStr();
+  const events = db.getEvents();
+  const nextEv = events.find(e=>e.event_date>=today)||null;
+
+  const expenses    = db.getExpenses();
+  const categories  = db.getCategories();
+  const totalBudget = categories.reduce((s,c)=>s+c.budget,0);
+  const totalSpent  = expenses.reduce((s,e)=>s+e.amount,0);
+  const moneyPct    = totalBudget>0 ? Math.min(totalSpent/totalBudget*100,100) : 0;
+
+  const workouts = db.getWorkouts();
+  const thisWeek = workouts.filter(w=>w.date>=weekStart()).length;
+
+  const items    = db.getChecklist();
+  const packed   = items.filter(i=>i.packed).length;
+  const packPct  = items.length>0 ? Math.round(packed/items.length*100) : 0;
+
+  let nextHtml;
+  if (nextEv) {
+    const days = daysUntil(nextEv.event_date);
+    nextHtml = `
+      <div class="countdown-big">${days>=0?days:'—'}</div>
+      <div class="countdown-label">${cdLabel(days)}</div>
+      <div style="margin-top:10px;font-weight:600">${esc(nextEv.name)}</div>
+      <div style="font-size:13px;color:var(--muted)">${fmtDate(nextEv.event_date)}</div>`;
+  } else {
+    nextHtml = `<div class="empty-state" style="padding:8px 0">No upcoming events</div>`;
+  }
+
+  el.innerHTML = `
+    <div class="section-header"><h2>Dashboard</h2></div>
+    <div class="dash-grid">
+      <div class="card">
+        <div class="card-title">Next Event</div>
+        ${nextHtml}
+      </div>
+      <div class="card">
+        <div class="card-title">Budget</div>
+        <div class="stat-value" style="color:${moneyPct>90?'var(--danger)':'inherit'}">£${totalSpent.toFixed(2)}</div>
+        <div class="stat-sub">of £${totalBudget.toFixed(2)} budgeted</div>
+        <div style="margin-top:14px"><div class="progress-bar"><div class="pbar-fill ${pbarClass(moneyPct)}" style="width:${moneyPct}%"></div></div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Fitness</div>
+        <div class="stat-value">${thisWeek}</div>
+        <div class="stat-sub">sessions this week · ${workouts.length} total</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Packing</div>
+        <div class="stat-value">${packed}<span style="font-size:20px;color:var(--muted)"> / ${items.length}</span></div>
+        <div class="stat-sub">items packed (${packPct}%)</div>
+        <div style="margin-top:14px"><div class="progress-bar"><div class="pbar-fill pbar-green" style="width:${packPct}%"></div></div></div>
+      </div>
+    </div>`;
+}
+
+// ── Roster Countdown ──────────────────────────────────────────────────────────
+function loadRoster() {
+  const el = document.getElementById('tab-roster');
+  const events = db.getEvents();
+  const today  = todayStr();
+  const nextId = events.find(e=>e.event_date>=today)?.id;
+
+  const evHtml = events.length
+    ? events.map(ev=>{
+        const days = daysUntil(ev.event_date);
+        const roster = db.getRoster(ev.id);
+        const confirmed = roster.filter(m=>m.confirmed).length;
+        return `
+          <div class="event-card${ev.id===nextId?' is-next':''}" id="ev-${ev.id}">
+            <div class="event-card-top">
+              <div>
+                <div class="event-name">${esc(ev.name)}</div>
+                <div class="event-date-sub">${fmtDate(ev.event_date)}</div>
+                ${ev.description?`<div style="font-size:13px;color:var(--muted);margin-top:4px">${esc(ev.description)}</div>`:''}
+              </div>
+              <div class="event-right">
+                <div>
+                  <div class="event-cd-num">${days>=0?days:'—'}</div>
+                  <div class="event-cd-label">${cdLabel(days)}</div>
+                </div>
+                <button class="btn btn-ghost btn-sm" onclick="toggleRoster(${ev.id})">
+                  Roster (${confirmed}/${roster.length})
+                </button>
+                <button class="btn btn-danger btn-xs" onclick="deleteEvent(${ev.id})">✕</button>
+              </div>
+            </div>
+            <div id="roster-body-${ev.id}" style="display:none"></div>
+          </div>`;
+      }).join('')
+    : `<div class="empty-state">No events yet — add one below.</div>`;
+
+  el.innerHTML = `
+    <div class="section-header"><h2>Roster Countdown</h2></div>
+    <div class="event-list">${evHtml}</div>
+    <hr class="divider">
+    <div class="card" style="max-width:540px">
+      <div class="card-title" style="margin-bottom:12px">Add Event</div>
+      <div class="form-row">
+        <input id="ev-name" placeholder="Event name" style="flex:1;min-width:160px">
+        <input id="ev-date" type="date" style="width:160px">
+      </div>
+      <div class="form-row">
+        <input id="ev-desc" placeholder="Description (optional)" style="flex:1">
+        <button class="btn btn-primary" onclick="addEvent()">Add Event</button>
+      </div>
+    </div>`;
+}
+
+function toggleRoster(eventId) {
+  const body = document.getElementById(`roster-body-${eventId}`);
+  if (body.style.display !== 'none') { body.style.display='none'; return; }
+  body.style.display = 'block';
+  renderRosterBody(eventId);
+}
+
+function renderRosterBody(eventId) {
+  const body    = document.getElementById(`roster-body-${eventId}`);
+  const members = db.getRoster(eventId);
+  const listHtml = members.length
+    ? members.map(m=>`
+        <div class="roster-member">
+          <input type="checkbox" ${m.confirmed?'checked':''} onchange="toggleConfirmed(${m.id},this.checked)">
+          <span class="roster-name">${esc(m.name)}</span>
+          ${m.role?`<span class="badge badge-blue">${esc(m.role)}</span>`:''}
+          <button class="btn btn-danger btn-xs" onclick="deleteRosterMember(${m.id},${eventId})">✕</button>
+        </div>`).join('')
+    : `<p style="font-size:13px;color:var(--muted);padding:8px 0">No members yet.</p>`;
+
+  body.innerHTML = `
+    <div class="roster-body">
+      ${listHtml}
+      <div class="form-row" style="margin-top:10px">
+        <input id="rm-name-${eventId}" placeholder="Name" style="flex:1">
+        <input id="rm-role-${eventId}" placeholder="Role" style="width:130px">
+        <button class="btn btn-primary btn-sm" onclick="addRosterMember(${eventId})">Add</button>
+      </div>
+    </div>`;
+}
+
+function addEvent() {
+  const name = document.getElementById('ev-name').value.trim();
+  const date = document.getElementById('ev-date').value;
+  const desc = document.getElementById('ev-desc').value.trim();
+  if (!name||!date) { toast('Name and date required','err'); return; }
+  db.addEvent({name, event_date:date, description:desc});
+  toast('Event added','ok');
+  loadRoster();
+}
+
+function deleteEvent(id) {
+  if (!confirm('Delete this event and its roster?')) return;
+  db.deleteEvent(id);
+  toast('Event deleted');
+  loadRoster();
+}
+
+function addRosterMember(eventId) {
+  const name = document.getElementById(`rm-name-${eventId}`).value.trim();
+  const role = document.getElementById(`rm-role-${eventId}`).value.trim();
+  if (!name) { toast('Name required','err'); return; }
+  db.addMember({event_id:eventId, name, role, confirmed:0});
+  renderRosterBody(eventId);
+  // refresh count badge
+  const roster    = db.getRoster(eventId);
+  const confirmed = roster.filter(m=>m.confirmed).length;
+  const btn = document.querySelector(`#ev-${eventId} .btn-ghost`);
+  if (btn) btn.textContent = `Roster (${confirmed}/${roster.length})`;
+}
+
+function toggleConfirmed(memberId, confirmed) {
+  db.updateMember(memberId, {confirmed: confirmed?1:0});
+}
+
+function deleteRosterMember(memberId, eventId) {
+  db.deleteMember(memberId);
+  renderRosterBody(eventId);
+  const roster    = db.getRoster(eventId);
+  const confirmed = roster.filter(m=>m.confirmed).length;
+  const btn = document.querySelector(`#ev-${eventId} .btn-ghost`);
+  if (btn) btn.textContent = `Roster (${confirmed}/${roster.length})`;
+}
+
+// ── Money Tracker ─────────────────────────────────────────────────────────────
+function loadMoney() {
+  const el = document.getElementById('tab-money');
+  const categories = db.getCategories();
+  const expenses   = db.getExpenses();
+
+  const catsWithSpent = categories.map(c=>({...c, spent:catSpent(c.id)}));
+  const totalBudget   = catsWithSpent.reduce((s,c)=>s+c.budget,0);
+  const totalSpent    = expenses.reduce((s,e)=>s+e.amount,0);
+  const overallPct    = totalBudget>0 ? Math.min(totalSpent/totalBudget*100,100) : 0;
+
+  const catOpts = categories.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
+
+  el.innerHTML = `
+    <div class="section-header"><h2>Money Tracker</h2></div>
+
+    <div class="card" style="margin-bottom:20px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+        <span class="card-title">Overall Budget</span>
+        <span style="font-weight:700">£${totalSpent.toFixed(2)} / £${totalBudget.toFixed(2)}</span>
+      </div>
+      <div class="progress-bar" style="height:12px">
+        <div class="pbar-fill ${pbarClass(overallPct)}" style="width:${overallPct}%"></div>
+      </div>
+    </div>
+
+    <div class="cat-grid">
+      ${catsWithSpent.map(c=>{
+        const pct = c.budget>0 ? Math.min(c.spent/c.budget*100,100) : 0;
+        return `
+          <div class="cat-card">
+            <div class="cat-card-header">
+              <span class="cat-name">${esc(c.name)}</span>
+              <button class="btn btn-danger btn-xs" onclick="deleteCategory(${c.id})">✕</button>
+            </div>
+            <div class="cat-amount">£${c.spent.toFixed(2)} of £${c.budget.toFixed(2)}</div>
+            <div class="progress-bar"><div class="pbar-fill ${pbarClass(pct)}" style="width:${pct}%"></div></div>
+          </div>`;
+      }).join('') || `<p style="color:var(--muted);font-size:14px">No categories yet.</p>`}
+    </div>
+
+    <div class="form-grid-2">
+      <div class="card">
+        <div class="card-title" style="margin-bottom:12px">Add Category</div>
+        <div class="form-row">
+          <input id="cat-name" placeholder="Category name" style="flex:1">
+          <input id="cat-budget" type="number" step="0.01" min="0" placeholder="Budget £" style="width:120px">
+          <button class="btn btn-primary" onclick="addCategory()">Add</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:12px">Log Expense</div>
+        <div class="form-row">
+          <input id="exp-desc" placeholder="Description" style="flex:1">
+          <input id="exp-amount" type="number" step="0.01" min="0" placeholder="£" style="width:90px">
+        </div>
+        <div class="form-row">
+          <select id="exp-cat" style="flex:1">
+            <option value="">No category</option>
+            ${catOpts}
+          </select>
+          <input id="exp-date" type="date" style="width:155px">
+          <button class="btn btn-primary" onclick="addExpense()">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="margin-bottom:12px">Expenses</div>
+      ${expenses.length ? `
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th></th></tr></thead>
+            <tbody>
+              ${expenses.map(e=>`
+                <tr>
+                  <td>${fmtDate(e.date)}</td>
+                  <td>${esc(e.description)}</td>
+                  <td><span class="badge badge-gray">${esc(catName(e.category_id))}</span></td>
+                  <td>£${e.amount.toFixed(2)}</td>
+                  <td><button class="btn btn-danger btn-xs" onclick="deleteExpense(${e.id})">✕</button></td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>` : `<div class="empty-state">No expenses logged yet.</div>`}
+    </div>`;
+
+  document.getElementById('exp-date').value = todayStr();
+}
+
+function addCategory() {
+  const name   = document.getElementById('cat-name').value.trim();
+  const budget = parseFloat(document.getElementById('cat-budget').value)||0;
+  if (!name) { toast('Category name required','err'); return; }
+  db.addCategory({name, budget});
+  toast('Category added','ok');
+  loadMoney();
+}
+
+function deleteCategory(id) {
+  if (!confirm('Delete this category? Expenses will become uncategorized.')) return;
+  db.deleteCategory(id);
+  toast('Category deleted');
+  loadMoney();
+}
+
+function addExpense() {
+  const desc   = document.getElementById('exp-desc').value.trim();
+  const amount = parseFloat(document.getElementById('exp-amount').value);
+  const catId  = document.getElementById('exp-cat').value;
+  const date   = document.getElementById('exp-date').value;
+  if (!desc||!amount||!date) { toast('Description, amount and date required','err'); return; }
+  db.addExpense({description:desc, amount, category_id:catId?parseInt(catId):null, date});
+  toast('Expense logged','ok');
+  loadMoney();
+}
+
+function deleteExpense(id) {
+  db.deleteExpense(id);
+  toast('Expense deleted');
+  loadMoney();
+}
+
+// ── Fitness Tracker ───────────────────────────────────────────────────────────
+function loadFitness() {
+  const el       = document.getElementById('tab-fitness');
+  const workouts = db.getWorkouts();
+  const ws       = weekStart();
+  const thisWeek = workouts.filter(w=>w.date>=ws).length;
+  const totMins  = workouts.reduce((s,w)=>s+w.duration_min,0);
+  const types    = new Set(workouts.map(w=>w.type)).size;
+
+  el.innerHTML = `
+    <div class="section-header"><h2>Fitness Tracker</h2></div>
+
+    <div class="stats-row">
+      <div class="stat-mini"><div class="stat-mini-val">${workouts.length}</div><div class="stat-mini-label">Total Sessions</div></div>
+      <div class="stat-mini"><div class="stat-mini-val">${thisWeek}</div><div class="stat-mini-label">This Week</div></div>
+      <div class="stat-mini"><div class="stat-mini-val">${totMins}</div><div class="stat-mini-label">Total Minutes</div></div>
+      <div class="stat-mini"><div class="stat-mini-val">${types}</div><div class="stat-mini-label">Activity Types</div></div>
+    </div>
+
+    <div class="card" style="max-width:600px;margin-bottom:20px">
+      <div class="card-title" style="margin-bottom:12px">Log Workout</div>
+      <div class="form-row">
+        <input id="wo-date" type="date" style="width:155px">
+        <select id="wo-type" style="flex:1">
+          <option>Run</option><option>Lift</option><option>Swim</option>
+          <option>Cycle</option><option>HIIT</option><option>Walk</option>
+          <option>Yoga</option><option>Sport</option><option>Other</option>
+        </select>
+        <input id="wo-dur" type="number" min="0" placeholder="Duration (min)" style="width:150px">
+      </div>
+      <div class="form-row">
+        <input id="wo-notes" placeholder="Notes (optional)" style="flex:1">
+        <button class="btn btn-primary" onclick="addWorkout()">Log</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="margin-bottom:12px">Workout Log</div>
+      ${workouts.length ? `
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Type</th><th>Duration</th><th>Notes</th><th></th></tr></thead>
+            <tbody>
+              ${workouts.map(w=>`
+                <tr>
+                  <td>${fmtDate(w.date)}</td>
+                  <td><span class="badge badge-blue">${esc(w.type)}</span></td>
+                  <td>${w.duration_min} min</td>
+                  <td style="color:var(--muted)">${esc(w.notes)||'—'}</td>
+                  <td><button class="btn btn-danger btn-xs" onclick="deleteWorkout(${w.id})">✕</button></td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>` : `<div class="empty-state">No workouts logged yet.</div>`}
+    </div>`;
+
+  document.getElementById('wo-date').value = todayStr();
+}
+
+function addWorkout() {
+  const date  = document.getElementById('wo-date').value;
+  const type  = document.getElementById('wo-type').value;
+  const dur   = parseInt(document.getElementById('wo-dur').value)||0;
+  const notes = document.getElementById('wo-notes').value.trim();
+  if (!date) { toast('Date required','err'); return; }
+  db.addWorkout({date, type, duration_min:dur, notes});
+  toast('Workout logged','ok');
+  loadFitness();
+}
+
+function deleteWorkout(id) {
+  db.deleteWorkout(id);
+  toast('Workout deleted');
+  loadFitness();
+}
+
+// ── Packing Checklist ─────────────────────────────────────────────────────────
+function loadPacking() {
+  const el    = document.getElementById('tab-packing');
+  const items = db.getChecklist();
+  const total  = items.length;
+  const packed = items.filter(i=>i.packed).length;
+  const pct    = total>0 ? Math.round(packed/total*100) : 0;
+
+  const groups = {};
+  items.forEach(i=>{ (groups[i.category]??=[]).push(i); });
+
+  const groupHtml = Object.entries(groups).map(([cat,catItems])=>`
+    <div class="checklist-section">
+      <div class="checklist-cat-title">${esc(cat)}</div>
+      ${catItems.map(item=>`
+        <div class="checklist-item">
+          <input type="checkbox" ${item.packed?'checked':''} onchange="toggleCheckItem(${item.id})">
+          <span class="item-name${item.packed?' done':''}">${esc(item.name)}</span>
+          <button class="btn btn-xs" style="background:transparent;color:var(--muted)" onclick="deleteCheckItem(${item.id})">✕</button>
+        </div>`).join('')}
+    </div>`).join('');
+
+  const existingCats = [...new Set(items.map(i=>i.category))];
+  const suggestions  = [...new Set([...existingCats,'Clothing','Toiletries','Electronics','Documents','Gear','Food','Other'])];
+
+  el.innerHTML = `
+    <div class="section-header">
+      <h2>Packing Checklist</h2>
+      ${total>0 ? `<button class="btn btn-ghost btn-sm" onclick="clearChecklist()">Clear all</button>` : ''}
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+        <span class="card-title">Progress</span>
+        <span style="font-weight:700">${packed} / ${total} packed &nbsp;(${pct}%)</span>
+      </div>
+      <div class="progress-bar" style="height:12px">
+        <div class="pbar-fill pbar-green" style="width:${pct}%"></div>
+      </div>
+    </div>
+
+    <div class="card" style="max-width:540px;margin-bottom:24px">
+      <div class="card-title" style="margin-bottom:12px">Add Item</div>
+      <div class="form-row">
+        <input id="item-name" placeholder="Item name" style="flex:1">
+        <input id="item-cat" placeholder="Category" style="width:150px" list="cat-list">
+        <datalist id="cat-list">
+          ${suggestions.map(c=>`<option value="${esc(c)}">`).join('')}
+        </datalist>
+        <button class="btn btn-primary" onclick="addCheckItem()">Add</button>
+      </div>
+    </div>
+
+    ${total>0 ? `<div class="card">${groupHtml}</div>`
+              : `<div class="empty-state">No items yet — add some above.</div>`}`;
+}
+
+function toggleCheckItem(id) {
+  db.toggleItem(id);
+  loadPacking();
+}
+
+function deleteCheckItem(id) {
+  db.deleteItem(id);
+  loadPacking();
+}
+
+function addCheckItem() {
+  const name = document.getElementById('item-name').value.trim();
+  const cat  = document.getElementById('item-cat').value.trim()||'General';
+  if (!name) { toast('Item name required','err'); return; }
+  db.addCheckItem({name, category:cat});
+  toast('Item added','ok');
+  loadPacking();
+}
+
+function clearChecklist() {
+  if (!confirm('Remove all checklist items?')) return;
+  db.clearChecklist();
+  toast('Checklist cleared');
+  loadPacking();
+}
+</script>
+</body>
+</html>
