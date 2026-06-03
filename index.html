@@ -236,7 +236,8 @@
     <h2 id="currentStatus">Loading...</h2>
     <div class="time" id="clock">--:--</div>
     <p id="statusMessage">Checking your schedule...</p>
-    <button class="button" onclick="enableNotifications()">Enable Notifications</button>
+    <p id="countdown" style="font-size:15px;color:#67ffab;font-weight:bold;margin-top:10px;"></p>
+    <button class="button" id="notifBtn" onclick="enableNotifications()">Enable Notifications</button>
     <p class="small">Install this page as a PWA for the best experience on iPhone or Android.</p>
   </div>
 
@@ -642,29 +643,76 @@ function updateClock() {
     localStorage.setItem("sentToday", JSON.stringify(sentToday));
   }
 
-  const m = now.getHours() * 60 + now.getMinutes();
-  const statusEl = document.getElementById("currentStatus");
-  const msgEl    = document.getElementById("statusMessage");
-  if (m < 12 * 60 + 30) {
+  const FIRST_MEAL  = 12 * 60 + 30;
+  const FAST_START  = 19 * 60 + 30;
+  const totalMins   = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+  const statusEl    = document.getElementById("currentStatus");
+  const msgEl       = document.getElementById("statusMessage");
+
+  let targetMins, countdownLabel;
+  if (totalMins < FIRST_MEAL) {
     statusEl.textContent = "Fasting Window ⏳";
     msgEl.textContent = "Water, black coffee or zero-calorie drinks only. Hold the line.";
-  } else if (m < 19 * 60 + 30) {
+    targetMins = FIRST_MEAL;
+    countdownLabel = "Eating window opens in";
+  } else if (totalMins < FAST_START) {
     statusEl.textContent = "Eating Window Open 🍽️";
     msgEl.textContent = "Prioritise protein, keep meals controlled and avoid random snacks.";
+    targetMins = FAST_START;
+    countdownLabel = "Fasting starts in";
   } else {
     statusEl.textContent = "Fasting Started 🔒";
     msgEl.textContent = "Kitchen closed. Water only. Tomorrow starts with discipline.";
+    targetMins = FIRST_MEAL + 24 * 60;
+    countdownLabel = "Eating window opens in";
   }
+
+  const remainSecs = Math.max(0, Math.round((targetMins - totalMins) * 60));
+  const h = Math.floor(remainSecs / 3600);
+  const m = Math.floor((remainSecs % 3600) / 60);
+  const s = remainSecs % 60;
+  const countdownStr = h > 0
+    ? `${h}h ${m}m`
+    : m > 0
+    ? `${m}m ${String(s).padStart(2, "0")}s`
+    : `${s}s`;
+  document.getElementById("countdown").textContent = `${countdownLabel} ${countdownStr}`;
 
   checkReminders(now);
 }
 
 // ── Notifications ─────────────────────────────────────────────────────────────
+function updateNotifButton() {
+  const btn = document.getElementById("notifBtn");
+  if (!("Notification" in window)) {
+    btn.textContent = "Notifications Not Supported";
+    btn.classList.add("dark");
+    btn.disabled = true;
+    return;
+  }
+  const p = Notification.permission;
+  if (p === "granted") {
+    btn.textContent = "Notifications On ✅";
+    btn.classList.add("dark");
+  } else if (p === "denied") {
+    btn.textContent = "Notifications Blocked — Enable in Settings";
+    btn.classList.add("dark");
+  } else {
+    btn.textContent = "Enable Notifications";
+    btn.classList.remove("dark");
+  }
+}
+
 function enableNotifications() {
-  if (!("Notification" in window)) { alert("Notifications are not supported on this browser."); return; }
+  if (!("Notification" in window)) return;
+  if (Notification.permission === "denied") {
+    alert("Notifications are blocked. Go to your browser or phone settings and allow notifications for this site.");
+    return;
+  }
+  if (Notification.permission === "granted") return;
   Notification.requestPermission().then(p => {
     if (p === "granted") new Notification("Lean-Out Coach", { body: "Notifications are on. Stay locked in, Alex 💪" });
-    else alert("Notifications were not enabled.");
+    updateNotifButton();
   });
 }
 
@@ -688,6 +736,7 @@ if ("serviceWorker" in navigator) {
 }
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
+updateNotifButton();
 restoreTracker();
 renderStreak();
 renderHistory();
