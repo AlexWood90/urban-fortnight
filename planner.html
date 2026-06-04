@@ -154,6 +154,21 @@
     .itin-location { font-size:12px; color:var(--muted); margin-top:2px }
     .itin-notes    { font-size:12px; color:var(--muted); margin-top:2px; font-style:italic }
 
+    /* ── Community ── */
+    .badge-green  { background:#dcfce7; color:#166534 }
+    .badge-yellow { background:#fef9c3; color:#854d0e }
+    .filter-pills { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:18px }
+    .pill { padding:5px 12px; border-radius:20px; border:1px solid var(--border); background:var(--card); font-size:13px; font-weight:500; cursor:pointer; transition:background .15s,color .15s,border-color .15s; color:var(--muted) }
+    .pill.active { background:var(--accent); color:#fff; border-color:var(--accent) }
+    .pill:hover:not(.active) { background:var(--bg) }
+    .comm-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:12px; margin-bottom:20px }
+    .comm-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:6px }
+    .comm-title { font-weight:600; font-size:15px; line-height:1.3 }
+    .comm-body  { font-size:13px; color:var(--text); line-height:1.5 }
+    .comm-footer { display:flex; align-items:center; justify-content:space-between; margin-top:4px }
+    .comm-author { font-size:12px; color:var(--muted) }
+    .stars { letter-spacing:1px; font-size:15px; color:#f59e0b }
+
     /* ── Search overlay ── */
     .search-overlay { position:fixed; inset:0; background:rgba(15,23,42,.7); z-index:300; display:none; align-items:flex-start; justify-content:center; padding:20px 16px; overflow-y:auto }
     .search-overlay.open { display:flex }
@@ -196,7 +211,9 @@
       .form-row { flex-direction:column }
       .form-row > input,
       .form-row > select,
-      .form-row > button { width:100% !important; min-width:0 !important; max-width:none !important }
+      .form-row > button,
+      .form-row > textarea { width:100% !important; min-width:0 !important; max-width:none !important }
+      .comm-grid { grid-template-columns:1fr }
 
       .form-grid-2 { grid-template-columns:1fr }
       .cat-grid    { grid-template-columns:1fr }
@@ -219,6 +236,7 @@
     <button data-tab="fitness">Fitness Tracker</button>
     <button data-tab="packing">Packing Checklist</button>
     <button data-tab="itinerary">Itinerary</button>
+    <button data-tab="community">Community</button>
   </nav>
   <div class="hdr-actions">
     <button class="hdr-btn" id="search-btn" onclick="openSearch()" title="Search (Ctrl+K)">&#9906;</button>
@@ -248,6 +266,7 @@
   <section id="tab-fitness"    class="tab-panel"></section>
   <section id="tab-packing"    class="tab-panel"></section>
   <section id="tab-itinerary"  class="tab-panel"></section>
+  <section id="tab-community"  class="tab-panel"></section>
 </main>
 
 <div id="toast-container"></div>
@@ -293,6 +312,10 @@ const db = {
   getItinerary(eid){ const l=this._r('tp_itin'); return(eid?l.filter(i=>i.event_id===eid):l).sort((a,b)=>a.date.localeCompare(b.date)||(a.time||'').localeCompare(b.time||'')) },
   addItinItem(o)   { const l=this._r('tp_itin'); const it={id:this._id('tp_itin'),...o,created_at:nowIso()}; l.push(it); this._w('tp_itin',l); return it },
   deleteItinItem(id){ this._w('tp_itin',this._r('tp_itin').filter(i=>i.id!==id)) },
+
+  getPosts(cat)  { const l=this._r('tp_comm'); return (cat&&cat!=='all'?l.filter(p=>p.category===cat):l).sort((a,b)=>b.id-a.id) },
+  addPost(o)     { const l=this._r('tp_comm'); const it={id:this._id('tp_comm'),...o,created_at:nowIso()}; l.push(it); this._w('tp_comm',l); return it },
+  deletePost(id) { this._w('tp_comm',this._r('tp_comm').filter(p=>p.id!==id)) },
 };
 
 function catSpent(id){ return db.getExpenses().filter(e=>e.category_id===id).reduce((s,e)=>s+e.amount,0) }
@@ -357,6 +380,7 @@ function toast(msg,type='') {
 const TABS={
   dashboard:loadDashboard, roster:loadRoster, money:loadMoney,
   fitness:loadFitness,     packing:loadPacking, itinerary:loadItinerary,
+  community:loadCommunity,
 };
 
 function showTab(name) {
@@ -390,8 +414,8 @@ function onSearch(q) {
   const results=performSearch(q.toLowerCase());
   if(!results.length){ el.innerHTML='<div class="empty-state" style="padding:24px">No results for <strong>'+esc(q)+'</strong></div>'; return; }
 
-  const TAB_LABELS={ event:'Events', roster:'Roster', expense:'Expenses', workout:'Workouts', checklist:'Checklist', itinerary:'Itinerary' };
-  const TAB_DEST  ={ event:'roster', roster:'roster', expense:'money', workout:'fitness', checklist:'packing', itinerary:'itinerary' };
+  const TAB_LABELS={ event:'Events', roster:'Roster', expense:'Expenses', workout:'Workouts', checklist:'Checklist', itinerary:'Itinerary', community:'Community' };
+  const TAB_DEST  ={ event:'roster', roster:'roster', expense:'money', workout:'fitness', checklist:'packing', itinerary:'itinerary', community:'community' };
 
   const groups={};
   results.forEach(r=>{ (groups[r.type]??=[]).push(r) });
@@ -432,6 +456,11 @@ function performSearch(q) {
   db.getItinerary().forEach(it=>{
     if(it.title.toLowerCase().includes(q)||(it.location||'').toLowerCase().includes(q)||(it.notes||'').toLowerCase().includes(q))
       res.push({type:'itinerary', title:it.title, sub:`${fmtDate(it.date)}${it.time?' · '+it.time:''}`});
+  });
+  db.getPosts().forEach(p=>{
+    const text=((p.title||'')+' '+p.body).toLowerCase();
+    if(text.includes(q)||(p.author||'').toLowerCase().includes(q))
+      res.push({type:'community', title:p.title||p.body.slice(0,50), sub:`${p.category} · ${p.author||'Anonymous'}`});
   });
   return res;
 }
@@ -1103,6 +1132,132 @@ function addItinItem(eventId) {
 }
 
 function deleteItinItem(id) { db.deleteItinItem(id); toast('Removed'); loadItinerary() }
+
+// ── Community ─────────────────────────────────────────────────────────────────
+let _commRating=0;
+
+const CAT_META={
+  camp:{label:'Camp',  icon:'🏕️', badge:'badge-blue'},
+  food:{label:'Food',  icon:'🍽️', badge:'badge-green'},
+  gym: {label:'Gym',   icon:'🏋️', badge:'badge-yellow'},
+  room:{label:'Room',  icon:'🛏️', badge:'badge-gray'},
+  tip: {label:'Tip',   icon:'💡', badge:'badge-blue'},
+};
+
+function starsHtml(r) {
+  if(!r) return '';
+  return `<span class="stars">${'★'.repeat(r)}${'☆'.repeat(5-r)}</span>`;
+}
+
+function loadCommunity() {
+  const el=document.getElementById('tab-community');
+  const filter=localStorage.getItem('tp_comm_filter')||'all';
+  const posts=db.getPosts(filter);
+
+  const PILLS=[
+    {k:'all', label:'All'},
+    {k:'camp',label:'🏕️ Camps'},
+    {k:'food',label:'🍽️ Food'},
+    {k:'gym', label:'🏋️ Gyms'},
+    {k:'room',label:'🛏️ Rooms'},
+    {k:'tip', label:'💡 Tips'},
+  ];
+
+  const pillsHtml=PILLS.map(p=>`
+    <button class="pill${filter===p.k?' active':''}" onclick="setCommunityFilter('${p.k}')">${p.label}</button>`).join('');
+
+  const postsHtml=posts.length
+    ?posts.map(p=>{
+        const meta=CAT_META[p.category]||{label:p.category,icon:'',badge:'badge-gray'};
+        return `
+          <div class="comm-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
+              <span class="badge ${meta.badge}" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">${meta.icon} ${meta.label}</span>
+              ${starsHtml(p.rating)}
+            </div>
+            ${p.title?`<div class="comm-title">${esc(p.title)}</div>`:''}
+            <div class="comm-body">${esc(p.body)}</div>
+            <div class="comm-footer">
+              <span class="comm-author">${esc(p.author||'Anonymous')} · ${fmtDate(p.date)}</span>
+              <button class="btn btn-danger btn-xs" onclick="deletePost(${p.id})">✕</button>
+            </div>
+          </div>`;
+      }).join('')
+    :`<div class="empty-state" style="grid-column:1/-1">No posts yet — be the first to share!</div>`;
+
+  el.innerHTML=`
+    <div class="section-header"><h2>FIFO Community</h2>
+      <span style="font-size:12px;color:var(--muted)">${posts.length} post${posts.length===1?'':'s'}</span>
+    </div>
+    <div class="filter-pills">${pillsHtml}</div>
+    <div class="comm-grid">${postsHtml}</div>
+    <hr class="divider">
+    <div class="card" style="max-width:540px">
+      <div class="card-title" style="margin-bottom:12px">Share a Review or Tip</div>
+      <div class="form-row">
+        <select id="comm-cat" style="flex:1" onchange="communityTypeChange()">
+          <option value="camp">🏕️ Camp Review</option>
+          <option value="food">🍽️ Food Review</option>
+          <option value="gym">🏋️ Gym Review</option>
+          <option value="room">🛏️ Room Review</option>
+          <option value="tip">💡 Tip / Info</option>
+        </select>
+        <input id="comm-author" placeholder="Your name" style="width:140px">
+      </div>
+      <div class="form-row">
+        <input id="comm-title" placeholder="Location or subject, e.g. Camp 3 gym" style="flex:1">
+      </div>
+      <div class="form-row" id="comm-rating-row" style="align-items:center;gap:4px">
+        <span style="font-size:13px;color:var(--muted);margin-right:4px">Rating:</span>
+        ${[1,2,3,4,5].map(n=>`<button class="comm-star" data-val="${n}" onclick="setRating(${n})" style="background:none;border:none;cursor:pointer;font-size:22px;padding:0 3px;color:#d1d5db;line-height:1">★</button>`).join('')}
+      </div>
+      <div class="form-row">
+        <textarea id="comm-body" placeholder="Write your review or tip… e.g. Camp gym has squat rack and dumbbells to 40kg." style="flex:1;min-height:90px;resize:vertical"></textarea>
+      </div>
+      <div class="form-row">
+        <button class="btn btn-primary" style="width:100%" onclick="addPost()">Post</button>
+      </div>
+    </div>`;
+
+  _commRating=0;
+  const savedName=localStorage.getItem('tp_comm_author')||'';
+  document.getElementById('comm-author').value=savedName;
+}
+
+function setCommunityFilter(cat) {
+  localStorage.setItem('tp_comm_filter',cat);
+  loadCommunity();
+}
+
+function communityTypeChange() {
+  const t=document.getElementById('comm-cat')?.value;
+  const row=document.getElementById('comm-rating-row');
+  if(row) row.style.display=t==='tip'?'none':'';
+}
+
+function setRating(n) {
+  _commRating=n;
+  document.querySelectorAll('.comm-star').forEach(btn=>{
+    btn.style.color=parseInt(btn.dataset.val)<=n?'#f59e0b':'#d1d5db';
+  });
+}
+
+function addPost() {
+  const cat=document.getElementById('comm-cat')?.value;
+  const author=document.getElementById('comm-author')?.value.trim();
+  const title=document.getElementById('comm-title')?.value.trim();
+  const body=document.getElementById('comm-body')?.value.trim();
+  if(!body){ toast('Please write something first','err'); return; }
+  const rating=cat==='tip'?null:(_commRating||null);
+  if(author) localStorage.setItem('tp_comm_author',author);
+  db.addPost({category:cat,title,body,rating,author,date:todayStr()});
+  toast('Posted!','ok'); loadCommunity();
+}
+
+function deletePost(id) {
+  if(!confirm('Delete this post?')) return;
+  db.deletePost(id); toast('Post deleted'); loadCommunity();
+}
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 document.addEventListener('keydown', e=>{
